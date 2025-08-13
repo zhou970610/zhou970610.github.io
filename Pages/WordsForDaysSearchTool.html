@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+     <meta charset="UTF-8">
+     <title>Words For Days Dictionary</title>
+     <style>
+          body { font-family: Arial, sans-serif; margin: 20px; }
+          input, textarea, button { margin: 5px 0; }
+          #result { min-height: 100px; border: 1px solid #ccc; padding: 10px; }
+          #blurResult { min-height: 50px; border: 1px solid #ccc; padding: 10px; }
+     </style>
+</head>
+<body>
+     <h2>Words For Days Dictionary</h2>
+     <div>
+        <button onclick="loadDataByHtml()">載入資料(HTML)</button>
+          <label>資料檔內容（JSON 格式）：</label><br>
+          <textarea id="dataInput"></textarea><br>
+          <button onclick="loadData()">載入資料</button>
+          <button onclick="saveData()">儲存資料</button>
+     </div>
+     <hr>
+     <div>
+          <label>查詢合成詞：</label>
+          <input type="text" id="targetWord" onkeydown="if(event.key==='Enter'){findFormula();}">
+          <button onclick="findFormula()">查詢</button>
+          <div id="result"></div>
+     </div>
+     <hr>
+     <div>
+          <label>模糊查詢：</label>
+          <input type="text" id="blurFind" oninput="blurFindFunc()">
+          <div id="blurResult"></div>
+     </div>
+     <script>
+          // 資料結構
+          class DictionaryEntry {
+               constructor(craftItem1Emoji = "", craftItem1 = "", craftItem2Emoji = "", craftItem2 = "", craftItem3Emoji = "", craftItem3 = "", hist1 = "", hist2 = "", craftItemCount = 0) {
+                    this.craftItem1Emoji = craftItem1Emoji;
+                    this.craftItem1 = craftItem1;
+                    this.craftItem2Emoji = craftItem2Emoji;
+                    this.craftItem2 = craftItem2;
+                    this.craftItem3Emoji = craftItem3Emoji;
+                    this.craftItem3 = craftItem3;
+                    this.hist1 = hist1;
+                    this.hist2 = hist2;
+                    this.craftItemCount = craftItemCount;
+               }
+
+               // 驗證資料結構
+               static validate(entry) {
+                    return (
+                         typeof entry.craftItem1Emoji === "string" &&
+                         typeof entry.craftItem1 === "string" &&
+                         typeof entry.craftItem2Emoji === "string" &&
+                         typeof entry.craftItem2 === "string" &&
+                         typeof entry.craftItem3Emoji === "string" &&
+                         typeof entry.craftItem3 === "string" &&
+                         typeof entry.hist1 === "string" &&
+                         typeof entry.hist2 === "string" &&
+                         typeof entry.craftItemCount === "number"
+                    );
+               }
+          }
+
+          let fileDatas = [];
+        function loadDataByHtml() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.html, text/html, .txt, text/plain';
+            input.onchange = function (event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const htmlString = e.target.result;
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(htmlString, 'text/html');
+                    const entries = Array.from(doc.querySelectorAll('.crafting-entry'));
+                    const tempDatas = entries.map(entry => {
+                        const items = entry.querySelectorAll('.crafting-item');
+                        const hist = entry.querySelectorAll('.hist');
+                        function parseItem(item) {
+                            if (!item) return ["", ""];
+                            const text = item.textContent || "";
+                            const firstSpace = text.indexOf(" ");
+                            if (firstSpace === -1) return ["", text];
+                            return [text.substring(0, firstSpace), text.substring(firstSpace + 1)];
+                        }
+                        const [craftItem1Emoji, craftItem1] = parseItem(items[0]);
+                        const [craftItem2Emoji, craftItem2] = parseItem(items[1]);
+                        const [craftItem3Emoji, craftItem3] = parseItem(items[2]);
+                        return new DictionaryEntry(
+                            craftItem1Emoji,
+                            craftItem1,
+                            craftItem2Emoji,
+                            craftItem2,
+                            craftItem3Emoji,
+                            craftItem3,
+                            hist[0]?.textContent || "",
+                            hist[1]?.textContent || "",
+                            items.length
+                        );
+                    });
+                    fileDatas = tempDatas;
+                    document.getElementById('dataInput').value = JSON.stringify(fileDatas, null, 2);
+                    alert('已從 HTML 載入 ' + fileDatas.length + ' 筆資料');
+                };
+                reader.readAsText(file, 'utf-8');
+            };
+            input.click();
+        }
+        
+          function loadData() {
+               const jsonString = document.getElementById('dataInput').value;
+               try {
+                    const parsedData = JSON.parse(jsonString);
+                    if (Array.isArray(parsedData) && parsedData.every(DictionaryEntry.validate)) {
+                         fileDatas = parsedData.map(data => new DictionaryEntry(
+                              data.craftItem1Emoji,
+                              data.craftItem1,
+                              data.craftItem2Emoji,
+                              data.craftItem2,
+                              data.craftItem3Emoji,
+                              data.craftItem3,
+                              data.hist1,
+                              data.hist2,
+                              data.craftItemCount
+                         ));
+                         alert('資料已載入，共 ' + fileDatas.length + ' 筆');
+                    } else {
+                         throw new Error('資料格式不正確');
+                    }
+               } catch (error) {
+                    alert('載入失敗：' + error.message);
+               }
+          }
+
+          function saveData() {
+               const jsonString = JSON.stringify(fileDatas, null, 2);
+               document.getElementById('dataInput').value = jsonString;
+               alert('資料已儲存為 JSON 格式');
+          }
+
+          function findFormula() {
+               const target = document.getElementById('targetWord').value.trim();
+               if (!target) {
+                    document.getElementById('result').innerText = '請輸入要查詢的詞。';
+                    return;
+               }
+               let showStrs = [];
+               let findedItems = [];
+               function findTargetFormula(TargetItem3) {
+                    if (findedItems.includes(TargetItem3)) return;
+                    findedItems.push(TargetItem3);
+                    const targetData = fileDatas.find(d => d.craftItem3 === TargetItem3);
+                    if (!targetData) return;
+                    findTargetFormula(targetData.craftItem1);
+                    findTargetFormula(targetData.craftItem2);
+                    let formula = '';
+                    if (targetData.craftItem1)
+                         formula += `${targetData.craftItem1Emoji} ${targetData.craftItem1}${targetData.hist1}`;
+                    if (targetData.craftItem2)
+                         formula += `${targetData.craftItem2Emoji} ${targetData.craftItem2}${targetData.hist2}`;
+                    formula += `${targetData.craftItem3Emoji} ${targetData.craftItem3}`;
+                    showStrs.push(formula);
+               }
+               findTargetFormula(target);
+               document.getElementById('result').innerHTML = showStrs.length
+                    ? showStrs.map(s => `<div>${s}</div>`).join('')
+                    : '查無結果';
+          }
+
+          function blurFindFunc() {
+               const blurText = document.getElementById('blurFind').value.trim();
+               let results = [];
+               if (blurText) {
+                    results = fileDatas.filter(d => d.craftItem3.includes(blurText))
+                         .map(d => `${d.craftItem3Emoji} ${d.craftItem3}`);
+               }
+               document.getElementById('blurResult').innerHTML = results.length
+                    ? results.map(s => `<div>${s}</div>`).join('')
+                    : '';
+          }
+     </script>
+</body>
+</html>
