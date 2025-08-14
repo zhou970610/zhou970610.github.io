@@ -1,22 +1,87 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
+<script>
+
+     // 資料結構
+     class DictionaryEntry {
+          constructor(craftItem1Emoji = "", craftItem1 = "", craftItem2Emoji = "", craftItem2 = "", craftItem3Emoji = "", craftItem3 = "", hist1 = "", hist2 = "", craftItemCount = 0) {
+               this.craftItem1Emoji = craftItem1Emoji;
+               this.craftItem1 = craftItem1;
+               this.craftItem2Emoji = craftItem2Emoji;
+               this.craftItem2 = craftItem2;
+               this.craftItem3Emoji = craftItem3Emoji;
+               this.craftItem3 = craftItem3;
+               this.hist1 = hist1;
+               this.hist2 = hist2;
+               this.craftItemCount = craftItemCount;
+          }
+
+          // 驗證資料結構
+          static validate(entry) {
+               return (
+                    typeof entry.craftItem1Emoji === "string" &&
+                    typeof entry.craftItem1 === "string" &&
+                    typeof entry.craftItem2Emoji === "string" &&
+                    typeof entry.craftItem2 === "string" &&
+                    typeof entry.craftItem3Emoji === "string" &&
+                    typeof entry.craftItem3 === "string" &&
+                    typeof entry.hist1 === "string" &&
+                    typeof entry.hist2 === "string" &&
+                    typeof entry.craftItemCount === "number"
+               );
+          }
+     }
+
+     // 全域變數 WordsDictionary
+     let WordsDictionary = [];
+
+</script>
+
 <head>
      <meta charset="UTF-8">
      <title>Words For Days Dictionary</title>
      <style>
-          body { font-family: Arial, sans-serif; margin: 20px; }
-          input, textarea, button { margin: 5px 0; }
-          #result { min-height: 100px; border: 1px solid #ccc; padding: 10px; }
-          #blurResult { min-height: 50px; border: 1px solid #ccc; padding: 10px; }
+          body {
+               font-family: Arial, sans-serif;
+               margin: 20px;
+          }
+
+          input,
+          textarea,
+          button {
+               margin: 5px 0;
+          }
+
+          #result {
+               min-height: 100px;
+               border: 1px solid #ccc;
+               padding: 10px;
+          }
+
+          #blurResult {
+               min-height: 50px;
+               border: 1px solid #ccc;
+               padding: 10px;
+          }
      </style>
 </head>
+
 <body>
      <h2>Words For Days Dictionary</h2>
      <div>
-        <button onclick="loadDataByHtml()">載入資料(HTML)</button>
-          <label>資料檔內容（JSON 格式）：</label><br>
-          <textarea id="dataInput"></textarea><br>
-          <button onclick="loadData()">載入資料</button>
+          <div>
+               <label>格式：</label>
+               <label><input type="radio" name="displayFormat" value="html" checked> HTML</label>
+               <label><input type="radio" name="displayFormat" value="json"> JSON</label>
+               &nbsp;&nbsp;
+               <label>資料來源：</label>
+               <label><input type="radio" name="dataSource" value="textarea" checked> 從文字框</label>
+               <label><input type="radio" name="dataSource" value="file"> 從檔案</label>
+          </div>
+          <button onclick="loadData()">載入資料</button><br>
+          <label>資料檔內容：</label><br>
+          <textarea id="dataInput"
+               style="height:100px;width:calc(100vw - 40px);min-width:100px;box-sizing:border-box;padding:10px;resize:vertical;"></textarea><br>
           <button onclick="saveData()">儲存資料</button>
      </div>
      <hr>
@@ -24,95 +89,164 @@
           <label>查詢合成詞：</label>
           <input type="text" id="targetWord" onkeydown="if(event.key==='Enter'){findFormula();}">
           <button onclick="findFormula()">查詢</button>
-          <div id="result"></div>
      </div>
      <hr>
      <div>
           <label>模糊查詢：</label>
           <input type="text" id="blurFind" oninput="blurFindFunc()">
-          <div id="blurResult"></div>
+     </div>
+     <div>
+          <h3>WordsDictionary 資料表</h3>
+          <table id="wordsTable" border="1" cellpadding="5" style="border-collapse:collapse;min-width:400px;">
+               <thead>
+                    <tr>
+                         <th>Item1</th>
+                         <th>Hist</th>
+                         <th>Item2</th>
+                         <th>=</th>
+                         <th>Item3</th>
+                    </tr>
+               </thead>
+               <tbody>
+                    <!-- 資料列將由 JS 動態產生 -->
+               </tbody>
+          </table>
      </div>
      <script>
-          // 資料結構
-          class DictionaryEntry {
-               constructor(craftItem1Emoji = "", craftItem1 = "", craftItem2Emoji = "", craftItem2 = "", craftItem3Emoji = "", craftItem3 = "", hist1 = "", hist2 = "", craftItemCount = 0) {
-                    this.craftItem1Emoji = craftItem1Emoji;
-                    this.craftItem1 = craftItem1;
-                    this.craftItem2Emoji = craftItem2Emoji;
-                    this.craftItem2 = craftItem2;
-                    this.craftItem3Emoji = craftItem3Emoji;
-                    this.craftItem3 = craftItem3;
-                    this.hist1 = hist1;
-                    this.hist2 = hist2;
-                    this.craftItemCount = craftItemCount;
-               }
-
-               // 驗證資料結構
-               static validate(entry) {
-                    return (
-                         typeof entry.craftItem1Emoji === "string" &&
-                         typeof entry.craftItem1 === "string" &&
-                         typeof entry.craftItem2Emoji === "string" &&
-                         typeof entry.craftItem2 === "string" &&
-                         typeof entry.craftItem3Emoji === "string" &&
-                         typeof entry.craftItem3 === "string" &&
-                         typeof entry.hist1 === "string" &&
-                         typeof entry.hist2 === "string" &&
-                         typeof entry.craftItemCount === "number"
-                    );
+          function renderWordsTable() {
+               const tbody = document.getElementById('wordsTable').querySelector('tbody');
+               tbody.innerHTML = '';
+               WordsDictionary.forEach(entry => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                         <td>${entry.craftItem1Emoji} ${entry.craftItem1}</td>
+                         <td>${entry.hist1}</td>
+                         <td>${entry.craftItem2Emoji} ${entry.craftItem2}</td>
+                         <td>=</td>
+                         <td>${entry.craftItem3Emoji} ${entry.craftItem3}</td>
+                    `;
+                    tbody.appendChild(tr);
+               });
+          }
+          // 初始渲染
+          renderWordsTable();
+          // 若 WordsDictionary 有變動時可再次呼叫 renderWordsTable()
+     </script>
+     <script>
+          // 將新資料加入 WordsDictionary，避免重複
+          function updateWordsDictionary(newEntries) {
+               newEntries.forEach(entry => {
+                    // 先找是否有組合一樣的資料
+                    let idx = WordsDictionary.findIndex(e => {
+                         if (
+                              entry.craftItem3 === e.craftItem3 &&
+                              !["earth", "wind", "fire", "water"].includes(entry.craftItem3)
+                         ) {
+                              return true;
+                         }
+                         return false;
+                    });
+                    if (idx === -1) {
+                         // 沒有合過的item3，直接加入
+                         WordsDictionary.push(entry);
+                    } else {
+                         // 有相同的，判斷是否要替換
+                         let existing = WordsDictionary[idx];
+                         // craftItemCount 較小則替換
+                         if (
+                              entry.craftItemCount < existing.craftItemCount
+                         ) {
+                              WordsDictionary[idx] = entry;
+                         }
+                    }
+               });
+               renderWordsTable();
+          }
+          let fileDatas = [];
+          function loadData() {
+               const dataSource = document.querySelector('input[name="dataSource"]:checked').value;
+               const displayFormat = document.querySelector('input[name="displayFormat"]:checked').value;
+               if (dataSource === 'textarea') {
+                    const data = document.getElementById('dataInput').value;
+                    if (displayFormat === 'json') {
+                         loadDataByJSON(data);
+                    } else {
+                         loadDataByHtml(data);
+                    }
+               } else if (dataSource === 'file') {
+                    if (displayFormat === 'html') {
+                         // 觸發檔案選擇並讀取 HTML
+                         const input = document.createElement('input');
+                         input.type = 'file';
+                         input.accept = '.html, text/html, .txt, text/plain';
+                         input.onchange = function (event) {
+                              const file = event.target.files[0];
+                              if (!file) return;
+                              const reader = new FileReader();
+                              reader.onload = function (e) {
+                                   loadDataByHtml(e.target.result);
+                              };
+                              reader.readAsText(file, 'utf-8');
+                         };
+                         input.click();
+                    } else if (displayFormat === 'json') {
+                         // 觸發檔案選擇並讀取 JSON
+                         const input = document.createElement('input');
+                         input.type = 'file';
+                         input.accept = '.json,application/json, .txt, text/plain';
+                         input.onchange = function (event) {
+                              const file = event.target.files[0];
+                              if (!file) return;
+                              const reader = new FileReader();
+                              reader.onload = function (e) {
+                                   loadDataByJSON(e.target.result);
+                              };
+                              reader.readAsText(file, 'utf-8');
+                         };
+                         input.click();
+                    }
                }
           }
+          function loadDataByHtml(htmlString) {
+               const parser = new DOMParser();
+               const doc = parser.parseFromString(htmlString, 'text/html');
+               const entries = Array.from(doc.querySelectorAll('.crafting-entry'));
+               const tempDatas = entries.map(entry => {
+                    const items = entry.querySelectorAll('.crafting-item');
+                    const hist = entry.querySelectorAll('.hist');
+                    function parseItem(item) {
+                         if (!item) return ["", ""];
+                         const text = item.textContent || "";
+                         const firstSpace = text.indexOf(" ");
+                         if (firstSpace === -1) return ["", text];
+                         return [text.substring(0, firstSpace), text.substring(firstSpace + 1)];
+                    }
+                    const [craftItem1Emoji, craftItem1] = parseItem(items[0]);
+                    const [craftItem2Emoji, craftItem2] = parseItem(items[1]);
+                    const [craftItem3Emoji, craftItem3] = parseItem(items[2]);
+                    return new DictionaryEntry(
+                         craftItem1Emoji,
+                         craftItem1,
+                         craftItem2Emoji,
+                         craftItem2,
+                         craftItem3Emoji,
+                         craftItem3,
+                         hist[0]?.textContent || "",
+                         hist[1]?.textContent || "",
+                         items.length
+                    );
+               });
+               fileDatas = tempDatas;
+               for (let i = 0; i < fileDatas.length; i++) {
+                    findCount(fileDatas, i);
+               }
+               document.getElementById('dataInput').value = JSON.stringify(fileDatas, null, 2);
+               updateWordsDictionary(fileDatas);
+               alert('已從 HTML 載入 ' + fileDatas.length + ' 筆資料');
+          }
 
-          let fileDatas = [];
-        function loadDataByHtml() {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = '.html, text/html, .txt, text/plain';
-            input.onchange = function (event) {
-                const file = event.target.files[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = function (e) {
-                    const htmlString = e.target.result;
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(htmlString, 'text/html');
-                    const entries = Array.from(doc.querySelectorAll('.crafting-entry'));
-                    const tempDatas = entries.map(entry => {
-                        const items = entry.querySelectorAll('.crafting-item');
-                        const hist = entry.querySelectorAll('.hist');
-                        function parseItem(item) {
-                            if (!item) return ["", ""];
-                            const text = item.textContent || "";
-                            const firstSpace = text.indexOf(" ");
-                            if (firstSpace === -1) return ["", text];
-                            return [text.substring(0, firstSpace), text.substring(firstSpace + 1)];
-                        }
-                        const [craftItem1Emoji, craftItem1] = parseItem(items[0]);
-                        const [craftItem2Emoji, craftItem2] = parseItem(items[1]);
-                        const [craftItem3Emoji, craftItem3] = parseItem(items[2]);
-                        return new DictionaryEntry(
-                            craftItem1Emoji,
-                            craftItem1,
-                            craftItem2Emoji,
-                            craftItem2,
-                            craftItem3Emoji,
-                            craftItem3,
-                            hist[0]?.textContent || "",
-                            hist[1]?.textContent || "",
-                            items.length
-                        );
-                    });
-                    fileDatas = tempDatas;
-                    document.getElementById('dataInput').value = JSON.stringify(fileDatas, null, 2);
-                    alert('已從 HTML 載入 ' + fileDatas.length + ' 筆資料');
-                };
-                reader.readAsText(file, 'utf-8');
-            };
-            input.click();
-        }
-        
-          function loadData() {
-               const jsonString = document.getElementById('dataInput').value;
+          function loadDataByJSON(jsonString) {
+               // const jsonString = document.getElementById('dataInput').value;
                try {
                     const parsedData = JSON.parse(jsonString);
                     if (Array.isArray(parsedData) && parsedData.every(DictionaryEntry.validate)) {
@@ -127,6 +261,11 @@
                               data.hist2,
                               data.craftItemCount
                          ));
+                         for (let i = 0; i < fileDatas.length; i++) {
+                              findCount(fileDatas, i);
+                         }
+                         document.getElementById('dataInput').value = JSON.stringify(fileDatas, null, 2);
+                         updateWordsDictionary(fileDatas);
                          alert('資料已載入，共 ' + fileDatas.length + ' 筆');
                     } else {
                          throw new Error('資料格式不正確');
@@ -135,11 +274,93 @@
                     alert('載入失敗：' + error.message);
                }
           }
+          function findCount(dataList, listIndex) {
+               const data = dataList[listIndex];
+               if (data.craftItemCount > 0) {
+                    return data.craftItemCount; // 已經計算過了，直接返回
+               }
+               let addCount1 = 0;
+               let addCount2 = 0;
+               if (!data.craftItem3) {
+                    return 0; // craftItem3 是空的，不需要計算
+               }
+               const baseItems = ["earth", "fire", "water", "wind"];
+               if (baseItems.includes(data.craftItem1)) {
+                    addCount1 = 0; // 初始單字，不計數
+               } else {
+                    const itemIndex = dataList.findIndex(finddata => finddata.craftItem3 === data.craftItem1);
+                    if (itemIndex !== -1) {
+                         addCount1 = findCount(dataList, itemIndex);
+                    }
+               }
+               if (baseItems.includes(data.craftItem2)) {
+                    addCount2 = 0; // 初始單字，不計數
+               } else {
+                    const itemIndex = dataList.findIndex(finddata => finddata.craftItem3 === data.craftItem2);
+                    if (itemIndex !== -1) {
+                         addCount2 = findCount(dataList, itemIndex);
+                    }
+               }
+               data.craftItemCount = Math.max(addCount1, addCount2) + 1; // 將計算結果存回 data
+               return data.craftItemCount;
+          }
 
           function saveData() {
-               const jsonString = JSON.stringify(fileDatas, null, 2);
-               document.getElementById('dataInput').value = jsonString;
-               alert('資料已儲存為 JSON 格式');
+               const jsonString = JSON.stringify(WordsDictionary, null, 2);
+                  // 讓使用者選擇儲存位置與檔案類型
+                  const blob = new Blob([jsonString], { type: "application/json" });
+                  const defaultFileName = "WordsDictionary.json";
+                  const fileTypeOptions = [
+                         { label: "JSON 檔 (*.json)", ext: ".json", mime: "application/json" },
+                         { label: "純文字檔 (*.txt)", ext: ".txt", mime: "text/plain" }
+                  ];
+                  // 建立選擇檔案類型的對話框
+                  let typeSelect = document.createElement("select");
+                  fileTypeOptions.forEach((opt, idx) => {
+                         let option = document.createElement("option");
+                         option.value = idx;
+                         option.textContent = opt.label;
+                         typeSelect.appendChild(option);
+                  });
+                  let dialog = document.createElement("div");
+                  dialog.style.position = "fixed";
+                  dialog.style.left = "50%";
+                  dialog.style.top = "50%";
+                  dialog.style.transform = "translate(-50%, -50%)";
+                  dialog.style.background = "#fff";
+                  dialog.style.border = "1px solid #ccc";
+                  dialog.style.padding = "20px";
+                  dialog.style.zIndex = 9999;
+                  dialog.innerHTML = "<b>選擇儲存檔案類型：</b><br>";
+                  dialog.appendChild(typeSelect);
+                  let okBtn = document.createElement("button");
+                  okBtn.textContent = "儲存";
+                  okBtn.style.marginLeft = "10px";
+                  let cancelBtn = document.createElement("button");
+                  cancelBtn.textContent = "取消";
+                  cancelBtn.style.marginLeft = "10px";
+                  dialog.appendChild(okBtn);
+                  dialog.appendChild(cancelBtn);
+                  document.body.appendChild(dialog);
+
+                  okBtn.onclick = function () {
+                         const idx = parseInt(typeSelect.value, 10);
+                         const opt = fileTypeOptions[idx];
+                         const blob2 = new Blob([jsonString], { type: opt.mime });
+                         const a = document.createElement("a");
+                         a.href = URL.createObjectURL(blob2);
+                         a.download = "WordsDictionary" + opt.ext;
+                         document.body.appendChild(a);
+                         a.click();
+                         setTimeout(() => {
+                               document.body.removeChild(a);
+                               document.body.removeChild(dialog);
+                         }, 100);
+                         alert('資料已儲存為 ' + opt.label);
+                  };
+                  cancelBtn.onclick = function () {
+                         document.body.removeChild(dialog);
+                  };
           }
 
           function findFormula() {
@@ -184,4 +405,5 @@
           }
      </script>
 </body>
+
 </html>
