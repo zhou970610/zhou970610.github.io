@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <link rel="stylesheet" href="../Pages.css">
 <html lang="zh-Hant">
@@ -71,10 +72,10 @@
                     <label><input type="radio" name="dataSource" value="textarea" checked> 從文字框</label>
                     <label><input type="radio" name="dataSource" value="file"> 從檔案</label>
                </div>
-               <button onclick="loadData()">載入資料</button><br>
                <label>資料檔內容：</label><br>
                <textarea id="dataInput"
                     style="height:100px;width:calc(100vw - 40px);min-width:100px;box-sizing:border-box;padding:10px;resize:vertical;"></textarea><br>
+               <button onclick="loadData()">載入資料</button>
                <button onclick="saveData()">儲存資料</button>
           </div>
           <hr>
@@ -113,7 +114,9 @@
           <p>資料來源：波波(bobo_928)、飛將軍(flyxiang)、思樂冰恐龍(slpkr_yo)、Repeat(repeat_yang)</p>
      </footer>
      <script>
-          // 若要修改版本號，請直接修改下方 version 變數
+          
+          //#region 版本號與資料結構定義與全域變數
+          //若要修改版本號，請直接修改下方 version 變數
           const version = "DEBUG 1.0.1";
           document.getElementById('versionText').textContent = version;
           // 資料結構
@@ -148,7 +151,11 @@
 
           // 全域變數 WordsDictionary
           let WordsDictionary = [];
+          // 全域變數 fileDatas 用於存讀檔
+          let fileDatas = [];
+          //#endregion
 
+          //#region 初始化與存讀檔相關
           // 初始化時載入 JSON 檔案
           async function initializeWordsDictionary() {
                try {
@@ -188,56 +195,9 @@
 
           }
 
-          // 渲染資料表
-          function renderWordsTable() {
-               const tbody = document.getElementById('wordsTable').querySelector('tbody');
-               tbody.innerHTML = '';
-               WordsDictionary.forEach(entry => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                    <td>${entry.craftItem1Emoji} ${entry.craftItem1}</td>
-                    <td>${entry.hist1}</td>
-                    <td>${entry.craftItem2Emoji} ${entry.craftItem2}</td>
-                    <td>=</td>
-                    <td>${entry.craftItem3Emoji} ${entry.craftItem3}</td>
-                `;
-                    tbody.appendChild(tr);
-               });
-          }
-
           // 頁面載入時初始化
           document.addEventListener('DOMContentLoaded', initializeWordsDictionary);
 
-          // 將新資料加入 WordsDictionary，避免重複
-          function updateWordsDictionary(newEntries) {
-               newEntries.forEach(entry => {
-                    // 先找是否有組合一樣的資料
-                    let idx = WordsDictionary.findIndex(e => {
-                         if (
-                              entry.craftItem3 === e.craftItem3 &&
-                              !["earth", "wind", "fire", "water"].includes(entry.craftItem3)
-                         ) {
-                              return true;
-                         }
-                         return false;
-                    });
-                    if (idx === -1) {
-                         // 沒有合過的item3，直接加入
-                         WordsDictionary.push(entry);
-                    } else {
-                         // 有相同的，判斷是否要替換
-                         let existing = WordsDictionary[idx];
-                         // craftItemCount 較小則替換
-                         if (
-                              entry.craftItemCount < existing.craftItemCount
-                         ) {
-                              WordsDictionary[idx] = entry;
-                         }
-                    }
-               });
-               renderWordsTable();
-          }
-          let fileDatas = [];
           function loadData() {
                const dataSource = document.querySelector('input[name="dataSource"]:checked').value;
                const displayFormat = document.querySelector('input[name="displayFormat"]:checked').value;
@@ -282,6 +242,7 @@
                     }
                }
           }
+
           function loadDataByHtml(htmlString) {
                const parser = new DOMParser();
                const doc = parser.parseFromString(htmlString, 'text/html');
@@ -348,36 +309,6 @@
                } catch (error) {
                     alert('載入失敗：' + error.message);
                }
-          }
-          function findCount(dataList, listIndex) {
-               const data = dataList[listIndex];
-               if (data.craftItemCount > 0) {
-                    return data.craftItemCount; // 已經計算過了，直接返回
-               }
-               let addCount1 = 0;
-               let addCount2 = 0;
-               if (!data.craftItem3) {
-                    return 0; // craftItem3 是空的，不需要計算
-               }
-               const baseItems = ["earth", "fire", "water", "wind"];
-               if (baseItems.includes(data.craftItem1)) {
-                    addCount1 = 0; // 初始單字，不計數
-               } else {
-                    const itemIndex = dataList.findIndex(finddata => finddata.craftItem3 === data.craftItem1);
-                    if (itemIndex !== -1) {
-                         addCount1 = findCount(dataList, itemIndex);
-                    }
-               }
-               if (baseItems.includes(data.craftItem2)) {
-                    addCount2 = 0; // 初始單字，不計數
-               } else {
-                    const itemIndex = dataList.findIndex(finddata => finddata.craftItem3 === data.craftItem2);
-                    if (itemIndex !== -1) {
-                         addCount2 = findCount(dataList, itemIndex);
-                    }
-               }
-               data.craftItemCount = Math.max(addCount1, addCount2) + 1; // 將計算結果存回 data
-               return data.craftItemCount;
           }
 
           function saveData() {
@@ -462,6 +393,91 @@
 
           }
 
+          //#endregion
+
+          //#region 與UI互動
+          // 渲染資料表
+          function renderWordsTable() {
+               const tbody = document.getElementById('wordsTable').querySelector('tbody');
+               tbody.innerHTML = '';
+               WordsDictionary.forEach(entry => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                    <td>${entry.craftItem1Emoji} ${entry.craftItem1}</td>
+                    <td>${entry.hist1}</td>
+                    <td>${entry.craftItem2Emoji} ${entry.craftItem2}</td>
+                    <td>=</td>
+                    <td>${entry.craftItem3Emoji} ${entry.craftItem3}</td>
+                `;
+                    tbody.appendChild(tr);
+               });
+          }
+
+          //#endregion
+
+          //#region 資料處理
+         
+          // 將新資料加入 WordsDictionary，避免重複
+          function updateWordsDictionary(newEntries) {
+               newEntries.forEach(entry => {
+                    // 先找是否有組合一樣的資料
+                    let idx = WordsDictionary.findIndex(e => {
+                         if (
+                              entry.craftItem3 === e.craftItem3 &&
+                              !["earth", "wind", "fire", "water"].includes(entry.craftItem3)
+                         ) {
+                              return true;
+                         }
+                         return false;
+                    });
+                    if (idx === -1) {
+                         // 沒有合過的item3，直接加入
+                         WordsDictionary.push(entry);
+                    } else {
+                         // 有相同的，判斷是否要替換
+                         let existing = WordsDictionary[idx];
+                         // craftItemCount 較小則替換
+                         if (
+                              entry.craftItemCount < existing.craftItemCount
+                         ) {
+                              WordsDictionary[idx] = entry;
+                         }
+                    }
+               });
+               renderWordsTable();
+          }
+          
+          function findCount(dataList, listIndex) {
+               const data = dataList[listIndex];
+               if (data.craftItemCount > 0) {
+                    return data.craftItemCount; // 已經計算過了，直接返回
+               }
+               let addCount1 = 0;
+               let addCount2 = 0;
+               if (!data.craftItem3) {
+                    return 0; // craftItem3 是空的，不需要計算
+               }
+               const baseItems = ["earth", "fire", "water", "wind"];
+               if (baseItems.includes(data.craftItem1)) {
+                    addCount1 = 0; // 初始單字，不計數
+               } else {
+                    const itemIndex = dataList.findIndex(finddata => finddata.craftItem3 === data.craftItem1);
+                    if (itemIndex !== -1) {
+                         addCount1 = findCount(dataList, itemIndex);
+                    }
+               }
+               if (baseItems.includes(data.craftItem2)) {
+                    addCount2 = 0; // 初始單字，不計數
+               } else {
+                    const itemIndex = dataList.findIndex(finddata => finddata.craftItem3 === data.craftItem2);
+                    if (itemIndex !== -1) {
+                         addCount2 = findCount(dataList, itemIndex);
+                    }
+               }
+               data.craftItemCount = Math.max(addCount1, addCount2) + 1; // 將計算結果存回 data
+               return data.craftItemCount;
+          }
+          
           function findFormula() {
                const target = document.getElementById('targetWord').value.trim();
                if (!target) {
@@ -527,6 +543,8 @@
                     renderWordsTable();
                };
           }
+          
+          //#endregion
      </script>
 </body>
 
