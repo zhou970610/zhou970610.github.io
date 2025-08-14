@@ -443,7 +443,7 @@
                function findTargetFormula(TargetItem3) {
                     if (findedItems.includes(TargetItem3)) return;
                     findedItems.push(TargetItem3);
-                    const targetData = fileDatas.find(d => d.craftItem3 === TargetItem3);
+                    const targetData = WordsDictionary.find(d => d.craftItem3 === TargetItem3);
                     if (!targetData) return;
                     findTargetFormula(targetData.craftItem1);
                     findTargetFormula(targetData.craftItem2);
@@ -472,15 +472,12 @@
                const blurText = document.getElementById('blurFind').value.trim();
                let results = [];
                if (blurText) {
-                    results = fileDatas.filter(d => d.craftItem3.includes(blurText))
-                         .map(d => `${d.craftItem3Emoji} ${d.craftItem3}`);
-                         
                   // 動態渲染 wordsTable 內容
                   const tbody = document.getElementById('wordsTable').querySelector('tbody');
                   tbody.innerHTML = '';
                   let filteredEntries;
                   if (blurText) {
-                         filteredEntries = fileDatas.filter(d => d.craftItem3.includes(blurText));
+                         filteredEntries = WordsDictionary.filter(d => d.craftItem3.includes(blurText));
                   } else {
                          filteredEntries = WordsDictionary;
                   }
