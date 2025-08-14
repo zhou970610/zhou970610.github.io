@@ -1,22 +1,65 @@
 <!DOCTYPE html>
+<link rel="stylesheet" href="Pages.css">
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Welcome to My Page</title>
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
-    <header>
-        <h1>Welcome to My Website</h1>
-    </header>
+
+    <div class="homepage-grid ">
+        <header class="homepage-header">
+            <div class="content">
+                <p class="content-h1">Welcome to My Website</p>
+            </div>
+        </header>
+        <aside class="homepage-leftbar">
+            <div class="content">
+                <button type="button" onclick="showSection('About')" class="leftbar-button"
+                    style="vertical-align:middle"><span>About </span></button>
+                <br>
+                <button type="button" onclick="showSection('Tools')" class="leftbar-button"
+                    style="vertical-align:middle"><span>Tools </span></button>
+                <script>
+                    function showSection(sectionId) {
+                        const about = document.getElementById('About');
+                        const tools = document.getElementById('Tools');
+                        if (sectionId === 'About') {
+                            about.style.display = '';
+                            tools.style.display = 'none';
+                        } else if (sectionId === 'Tools') {
+                            about.style.display = 'none';
+                            tools.style.display = '';
+                        }
+                    }
+                    // 預設顯示 About
+                    window.onload = function () {
+                        showSection('About');
+                    };
+                </script>
+            </div>
+        </aside>
+        <main class="homepage-main">
+            <div class="content">
+                <a id="Tools" class="content" style="text-align: left;" href="Pages/WordsForDaysSearchTool.html">
+                    WordsForDays Search Tool </a>
+                <p id="About">
+                    一個普通的工程師。
+                </p>
+            </div>
+        </main>
+        <footer class="homepage-footer">
+            <div class="content">
+                <p>&copy; 2025 MJ Zhou</p>
+            </div>
+        </footer>
+    </div>
     <main>
-        <p>WordsForDays Search Tool: 
-            <button type="button" onclick="window.location.href='Pages/WordsForDaysSearchTool.html'">GO GO</button>
-        </p>
     </main>
-    <footer>
-        <p>&copy; 2024 MJ Zhou</p>
-    </footer>
 </body>
+
 </html>

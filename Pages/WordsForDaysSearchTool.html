@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<link rel="stylesheet" href="../Pages.css">
 <html lang="zh-Hant">
 
 <head>
@@ -15,76 +16,105 @@
           button {
                margin: 5px 0;
           }
-
-          #result {
-               min-height: 100px;
-               border: 1px solid #ccc;
-               padding: 10px;
-          }
-
-          #blurResult {
-               min-height: 50px;
-               border: 1px solid #ccc;
-               padding: 10px;
-          }
      </style>
 </head>
 
 <body>
-     <h2>
-          Words For Days Dictionary
+     <header class="page-header">
+          <div class="content">
+               <p class="content-h1">Words For Days Dictionary</p>
+          </div>
+     </header>
+     <div class="page-topbar">
+          <button type="button" onclick="window.location.href='../index.html'" class="topbar-button"
+               style="vertical-align:middle"><span>Home</span></button>
+          <button type="button" class="topbar-button" style="vertical-align:middle" onclick="showSection('ToolDIV')">
+               <span>Tool</span>
+          </button>
+          <button type="button" class="topbar-button" style="vertical-align:middle" onclick="showSection('LogDIV')">
+               <span>Log</span>
+          </button>
+          <script>
+               function showSection(sectionId) {
+                    const ToolDIV = document.getElementById('ToolDIV');
+                    const LogDIV = document.getElementById('LogDIV');
+                    if (sectionId === 'ToolDIV') {
+                         ToolDIV.style.display = '';
+                         LogDIV.style.display = 'none';
+                    } else if (sectionId === 'LogDIV') {
+                         ToolDIV.style.display = 'none';
+                         LogDIV.style.display = '';
+                    }
+               }
+               // 預設顯示 About
+               window.onload = function () {
+                    showSection('ToolDIV');
+               };
+          </script>
+     </div>
+     <br>
+     <div id="LogDIV">
+          <div>
+               <label>Log 訊息：</label>
+               <iframe src="WordsForDaysSearchToolLog.html"
+                    style="width:100%;height:160px;border:1px solid #ccc;background:#fff;" title="Log 訊息"></iframe>
+          </div>
+     </div>
+     <div id="ToolDIV">
+          <div>
+               <div>
+                    <label>格式：</label>
+                    <label><input type="radio" name="displayFormat" value="html" checked> HTML</label>
+                    <label><input type="radio" name="displayFormat" value="json"> JSON</label>
+                    &nbsp;&nbsp;
+                    <label>資料來源：</label>
+                    <label><input type="radio" name="dataSource" value="textarea" checked> 從文字框</label>
+                    <label><input type="radio" name="dataSource" value="file"> 從檔案</label>
+               </div>
+               <button onclick="loadData()">載入資料</button><br>
+               <label>資料檔內容：</label><br>
+               <textarea id="dataInput"
+                    style="height:100px;width:calc(100vw - 40px);min-width:100px;box-sizing:border-box;padding:10px;resize:vertical;"></textarea><br>
+               <button onclick="saveData()">儲存資料</button>
+          </div>
+          <hr>
+          <div>
+               <label>查詢合成詞：</label>
+               <input type="text" id="targetWord" onkeydown="if(event.key==='Enter'){findFormula();}">
+               <button onclick="findFormula()">查詢</button>
+          </div>
+          <hr>
+          <div>
+               <label>模糊查詢：</label>
+               <input type="text" id="blurFind" oninput="blurFindFunc()">
+          </div>
+          <div>
+               <h3>WordsDictionary 資料表</h3>
+               <table id="wordsTable" border="1" cellpadding="5" style="border-collapse:collapse;min-width:400px;">
+                    <thead>
+                         <tr>
+                              <th>Item1</th>
+                              <th>Hist</th>
+                              <th>Item2</th>
+                              <th>=</th>
+                              <th>Item3</th>
+                         </tr>
+                    </thead>
+                    <tbody>
+                         <!-- 資料列將由 JS 動態產生 -->
+                    </tbody>
+               </table>
+          </div>
+     </div>
+     <footer>
           <span style="font-size: 1rem; margin-left: 10px;">
                版本：<span id="versionText">1.0.0</span>
           </span>
-     </h2>
-     <div>
-          <div>
-               <label>格式：</label>
-               <label><input type="radio" name="displayFormat" value="html" checked> HTML</label>
-               <label><input type="radio" name="displayFormat" value="json"> JSON</label>
-               &nbsp;&nbsp;
-               <label>資料來源：</label>
-               <label><input type="radio" name="dataSource" value="textarea" checked> 從文字框</label>
-               <label><input type="radio" name="dataSource" value="file"> 從檔案</label>
-          </div>
-          <button onclick="loadData()">載入資料</button><br>
-          <label>資料檔內容：</label><br>
-          <textarea id="dataInput"
-               style="height:100px;width:calc(100vw - 40px);min-width:100px;box-sizing:border-box;padding:10px;resize:vertical;"></textarea><br>
-          <button onclick="saveData()">儲存資料</button>
-     </div>
-     <hr>
-     <div>
-          <label>查詢合成詞：</label>
-          <input type="text" id="targetWord" onkeydown="if(event.key==='Enter'){findFormula();}">
-          <button onclick="findFormula()">查詢</button>
-     </div>
-     <hr>
-     <div>
-          <label>模糊查詢：</label>
-          <input type="text" id="blurFind" oninput="blurFindFunc()">
-     </div>
-     <div>
-          <h3>WordsDictionary 資料表</h3>
-          <table id="wordsTable" border="1" cellpadding="5" style="border-collapse:collapse;min-width:400px;">
-               <thead>
-                    <tr>
-                         <th>Item1</th>
-                         <th>Hist</th>
-                         <th>Item2</th>
-                         <th>=</th>
-                         <th>Item3</th>
-                    </tr>
-               </thead>
-               <tbody>
-                    <!-- 資料列將由 JS 動態產生 -->
-               </tbody>
-          </table>
-     </div>
-
+          <p>資料來源：波波(bobo_928)、飛將軍(flyxiang)、思樂冰恐龍(slpkr_yo)、Repeat(repeat_yang)</p>
+     </footer>
      <script>
           // 若要修改版本號，請直接修改下方 version 變數
-          const version = "DEBUG 1.0.0";
+          const version = "DEBUG 1.0.1";
           document.getElementById('versionText').textContent = version;
           // 資料結構
           class DictionaryEntry {
@@ -472,16 +502,16 @@
                const blurText = document.getElementById('blurFind').value.trim();
                let results = [];
                if (blurText) {
-                  // 動態渲染 wordsTable 內容
-                  const tbody = document.getElementById('wordsTable').querySelector('tbody');
-                  tbody.innerHTML = '';
-                  let filteredEntries;
-                  if (blurText) {
+                    // 動態渲染 wordsTable 內容
+                    const tbody = document.getElementById('wordsTable').querySelector('tbody');
+                    tbody.innerHTML = '';
+                    let filteredEntries;
+                    if (blurText) {
                          filteredEntries = WordsDictionary.filter(d => d.craftItem3.includes(blurText));
-                  } else {
+                    } else {
                          filteredEntries = WordsDictionary;
-                  }
-                  filteredEntries.forEach(entry => {
+                    }
+                    filteredEntries.forEach(entry => {
                          const tr = document.createElement('tr');
                          tr.innerHTML = `
                                <td>${entry.craftItem1Emoji} ${entry.craftItem1}</td>
@@ -491,9 +521,9 @@
                                <td>${entry.craftItem3Emoji} ${entry.craftItem3}</td>
                          `;
                          tbody.appendChild(tr);
-                  })
+                    })
                }
-               else{
+               else {
                     renderWordsTable();
                };
           }
