@@ -123,33 +123,39 @@
           async function initializeWordsDictionary() {
                try {
                     // 動態判斷路徑
-                    // 根據當前 HTML 檔案位置自動推算 JSON 路徑
-                    let jsonUrl = location.pathname.replace(/\/Pages\/[^\/]+$/, '/DataSets/WordsDictionary.json');
-                    const response = await fetch(jsonUrl);
-                    if (!response.ok) {
-                         throw new Error('無法載入 WordsDictionary.json');
-                    }
-                    const data = await response.json();
-                    if (Array.isArray(data) && data.every(DictionaryEntry.validate)) {
-                         WordsDictionary = data.map(entry => new DictionaryEntry(
-                              entry.craftItem1Emoji,
-                              entry.craftItem1,
-                              entry.craftItem2Emoji,
-                              entry.craftItem2,
-                              entry.craftItem3Emoji,
-                              entry.craftItem3,
-                              entry.hist1,
-                              entry.hist2,
-                              entry.craftItemCount
-                         ));
-                         console.log('WordsDictionary 已初始化', WordsDictionary);
-                         renderWordsTable();
+                    let jsonUrl;
+                    if (location.hostname === "localhost" || location.protocol === "file:") {
+                         // 本地端測試就自己匯入吧 (っ °Д °;)っ
                     } else {
-                         console.error('資料格式不正確');
+                         // 線上 github pages
+                         jsonUrl = "https://zhou970610.github.io/DataSets/WordsDictionary.json";
+                         const response = await fetch(jsonUrl);
+                         if (!response.ok) {
+                              throw new Error('無法載入 WordsDictionary.json');
+                         }
+                         const data = await response.json();
+                         if (Array.isArray(data) && data.every(DictionaryEntry.validate)) {
+                              WordsDictionary = data.map(entry => new DictionaryEntry(
+                                   entry.craftItem1Emoji,
+                                   entry.craftItem1,
+                                   entry.craftItem2Emoji,
+                                   entry.craftItem2,
+                                   entry.craftItem3Emoji,
+                                   entry.craftItem3,
+                                   entry.hist1,
+                                   entry.hist2,
+                                   entry.craftItemCount
+                              ));
+                              console.log('WordsDictionary 已初始化成功');
+                              renderWordsTable();
+                         } else {
+                              console.error('資料格式不正確');
+                         }
                     }
                } catch (error) {
                     console.error('初始化失敗：', error);
                }
+
           }
 
           // 渲染資料表
@@ -450,9 +456,16 @@
                     showStrs.push(formula);
                }
                findTargetFormula(target);
-               document.getElementById('result').innerHTML = showStrs.length
-                    ? showStrs.map(s => `<div>${s}</div>`).join('')
-                    : '查無結果';
+               if (showStrs.length === 0) {
+                    alert('查無此詞，請確認輸入正確。');
+                    return;
+               }
+               const resultWindow = window.open("", "查詢結果", "width=400,height=400");
+               resultWindow.document.write("<!DOCTYPE html><html><head><title>查詢結果</title><meta charset='UTF-8'></head><body>");
+               resultWindow.document.write("<h3>查詢結果</h3>");
+               resultWindow.document.write(showStrs.map(s => `<div>${s}</div>`).join(''));
+               resultWindow.document.write("</body></html>");
+               resultWindow.document.close();
           }
 
           function blurFindFunc() {
@@ -461,10 +474,31 @@
                if (blurText) {
                     results = fileDatas.filter(d => d.craftItem3.includes(blurText))
                          .map(d => `${d.craftItem3Emoji} ${d.craftItem3}`);
+                         
+                  // 動態渲染 wordsTable 內容
+                  const tbody = document.getElementById('wordsTable').querySelector('tbody');
+                  tbody.innerHTML = '';
+                  let filteredEntries;
+                  if (blurText) {
+                         filteredEntries = fileDatas.filter(d => d.craftItem3.includes(blurText));
+                  } else {
+                         filteredEntries = WordsDictionary;
+                  }
+                  filteredEntries.forEach(entry => {
+                         const tr = document.createElement('tr');
+                         tr.innerHTML = `
+                               <td>${entry.craftItem1Emoji} ${entry.craftItem1}</td>
+                               <td>${entry.hist1}</td>
+                               <td>${entry.craftItem2Emoji} ${entry.craftItem2}</td>
+                               <td>=</td>
+                               <td>${entry.craftItem3Emoji} ${entry.craftItem3}</td>
+                         `;
+                         tbody.appendChild(tr);
+                  })
                }
-               document.getElementById('blurResult').innerHTML = results.length
-                    ? results.map(s => `<div>${s}</div>`).join('')
-                    : '';
+               else{
+                    renderWordsTable();
+               };
           }
      </script>
 </body>
