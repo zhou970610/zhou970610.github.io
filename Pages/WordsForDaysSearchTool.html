@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
+
 <script>
 
      // 資料結構
@@ -67,7 +68,12 @@
 </head>
 
 <body>
-     <h2>Words For Days Dictionary</h2>
+     <h2>
+          Words For Days Dictionary
+          <span style="font-size: 1rem; margin-left: 10px;">
+               版本：<span id="versionText">1.0.0</span>
+          </span>
+     </h2>
      <div>
           <div>
                <label>格式：</label>
@@ -112,6 +118,12 @@
                </tbody>
           </table>
      </div>
+
+     <script>
+          // 若要修改版本號，請直接修改下方 version 變數
+          const version = "DEBUG 1.0.0";
+          document.getElementById('versionText').textContent = version;
+     </script>
      <script>
           function renderWordsTable() {
                const tbody = document.getElementById('wordsTable').querySelector('tbody');
@@ -307,60 +319,60 @@
 
           function saveData() {
                const jsonString = JSON.stringify(WordsDictionary, null, 2);
-                  // 讓使用者選擇儲存位置與檔案類型
-                  const blob = new Blob([jsonString], { type: "application/json" });
-                  const defaultFileName = "WordsDictionary.json";
-                  const fileTypeOptions = [
-                         { label: "JSON 檔 (*.json)", ext: ".json", mime: "application/json" },
-                         { label: "純文字檔 (*.txt)", ext: ".txt", mime: "text/plain" }
-                  ];
-                  // 建立選擇檔案類型的對話框
-                  let typeSelect = document.createElement("select");
-                  fileTypeOptions.forEach((opt, idx) => {
-                         let option = document.createElement("option");
-                         option.value = idx;
-                         option.textContent = opt.label;
-                         typeSelect.appendChild(option);
-                  });
-                  let dialog = document.createElement("div");
-                  dialog.style.position = "fixed";
-                  dialog.style.left = "50%";
-                  dialog.style.top = "50%";
-                  dialog.style.transform = "translate(-50%, -50%)";
-                  dialog.style.background = "#fff";
-                  dialog.style.border = "1px solid #ccc";
-                  dialog.style.padding = "20px";
-                  dialog.style.zIndex = 9999;
-                  dialog.innerHTML = "<b>選擇儲存檔案類型：</b><br>";
-                  dialog.appendChild(typeSelect);
-                  let okBtn = document.createElement("button");
-                  okBtn.textContent = "儲存";
-                  okBtn.style.marginLeft = "10px";
-                  let cancelBtn = document.createElement("button");
-                  cancelBtn.textContent = "取消";
-                  cancelBtn.style.marginLeft = "10px";
-                  dialog.appendChild(okBtn);
-                  dialog.appendChild(cancelBtn);
-                  document.body.appendChild(dialog);
+               // 讓使用者選擇儲存位置與檔案類型
+               const blob = new Blob([jsonString], { type: "application/json" });
+               const defaultFileName = "WordsDictionary.json";
+               const fileTypeOptions = [
+                    { label: "JSON 檔 (*.json)", ext: ".json", mime: "application/json" },
+                    { label: "純文字檔 (*.txt)", ext: ".txt", mime: "text/plain" }
+               ];
+               // 建立選擇檔案類型的對話框
+               let typeSelect = document.createElement("select");
+               fileTypeOptions.forEach((opt, idx) => {
+                    let option = document.createElement("option");
+                    option.value = idx;
+                    option.textContent = opt.label;
+                    typeSelect.appendChild(option);
+               });
+               let dialog = document.createElement("div");
+               dialog.style.position = "fixed";
+               dialog.style.left = "50%";
+               dialog.style.top = "50%";
+               dialog.style.transform = "translate(-50%, -50%)";
+               dialog.style.background = "#fff";
+               dialog.style.border = "1px solid #ccc";
+               dialog.style.padding = "20px";
+               dialog.style.zIndex = 9999;
+               dialog.innerHTML = "<b>選擇儲存檔案類型：</b><br>";
+               dialog.appendChild(typeSelect);
+               let okBtn = document.createElement("button");
+               okBtn.textContent = "儲存";
+               okBtn.style.marginLeft = "10px";
+               let cancelBtn = document.createElement("button");
+               cancelBtn.textContent = "取消";
+               cancelBtn.style.marginLeft = "10px";
+               dialog.appendChild(okBtn);
+               dialog.appendChild(cancelBtn);
+               document.body.appendChild(dialog);
 
-                  okBtn.onclick = function () {
-                         const idx = parseInt(typeSelect.value, 10);
-                         const opt = fileTypeOptions[idx];
-                         const blob2 = new Blob([jsonString], { type: opt.mime });
-                         const a = document.createElement("a");
-                         a.href = URL.createObjectURL(blob2);
-                         a.download = "WordsDictionary" + opt.ext;
-                         document.body.appendChild(a);
-                         a.click();
-                         setTimeout(() => {
-                               document.body.removeChild(a);
-                               document.body.removeChild(dialog);
-                         }, 100);
-                         alert('資料已儲存為 ' + opt.label);
-                  };
-                  cancelBtn.onclick = function () {
+               okBtn.onclick = function () {
+                    const idx = parseInt(typeSelect.value, 10);
+                    const opt = fileTypeOptions[idx];
+                    const blob2 = new Blob([jsonString], { type: opt.mime });
+                    const a = document.createElement("a");
+                    a.href = URL.createObjectURL(blob2);
+                    a.download = "WordsDictionary" + opt.ext;
+                    document.body.appendChild(a);
+                    a.click();
+                    setTimeout(() => {
+                         document.body.removeChild(a);
                          document.body.removeChild(dialog);
-                  };
+                    }, 100);
+                    alert('資料已儲存為 ' + opt.label);
+               };
+               cancelBtn.onclick = function () {
+                    document.body.removeChild(dialog);
+               };
           }
 
           function findFormula() {
