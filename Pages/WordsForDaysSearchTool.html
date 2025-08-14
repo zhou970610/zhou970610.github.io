@@ -1,43 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 
-<script>
-
-     // 資料結構
-     class DictionaryEntry {
-          constructor(craftItem1Emoji = "", craftItem1 = "", craftItem2Emoji = "", craftItem2 = "", craftItem3Emoji = "", craftItem3 = "", hist1 = "", hist2 = "", craftItemCount = 0) {
-               this.craftItem1Emoji = craftItem1Emoji;
-               this.craftItem1 = craftItem1;
-               this.craftItem2Emoji = craftItem2Emoji;
-               this.craftItem2 = craftItem2;
-               this.craftItem3Emoji = craftItem3Emoji;
-               this.craftItem3 = craftItem3;
-               this.hist1 = hist1;
-               this.hist2 = hist2;
-               this.craftItemCount = craftItemCount;
-          }
-
-          // 驗證資料結構
-          static validate(entry) {
-               return (
-                    typeof entry.craftItem1Emoji === "string" &&
-                    typeof entry.craftItem1 === "string" &&
-                    typeof entry.craftItem2Emoji === "string" &&
-                    typeof entry.craftItem2 === "string" &&
-                    typeof entry.craftItem3Emoji === "string" &&
-                    typeof entry.craftItem3 === "string" &&
-                    typeof entry.hist1 === "string" &&
-                    typeof entry.hist2 === "string" &&
-                    typeof entry.craftItemCount === "number"
-               );
-          }
-     }
-
-     // 全域變數 WordsDictionary
-     let WordsDictionary = [];
-
-</script>
-
 <head>
      <meta charset="UTF-8">
      <title>Words For Days Dictionary</title>
@@ -123,28 +86,92 @@
           // 若要修改版本號，請直接修改下方 version 變數
           const version = "DEBUG 1.0.0";
           document.getElementById('versionText').textContent = version;
-     </script>
-     <script>
+          // 資料結構
+          class DictionaryEntry {
+               constructor(craftItem1Emoji = "", craftItem1 = "", craftItem2Emoji = "", craftItem2 = "", craftItem3Emoji = "", craftItem3 = "", hist1 = "", hist2 = "", craftItemCount = 0) {
+                    this.craftItem1Emoji = craftItem1Emoji;
+                    this.craftItem1 = craftItem1;
+                    this.craftItem2Emoji = craftItem2Emoji;
+                    this.craftItem2 = craftItem2;
+                    this.craftItem3Emoji = craftItem3Emoji;
+                    this.craftItem3 = craftItem3;
+                    this.hist1 = hist1;
+                    this.hist2 = hist2;
+                    this.craftItemCount = craftItemCount;
+               }
+
+               // 驗證資料結構
+               static validate(entry) {
+                    return (
+                         typeof entry.craftItem1Emoji === "string" &&
+                         typeof entry.craftItem1 === "string" &&
+                         typeof entry.craftItem2Emoji === "string" &&
+                         typeof entry.craftItem2 === "string" &&
+                         typeof entry.craftItem3Emoji === "string" &&
+                         typeof entry.craftItem3 === "string" &&
+                         typeof entry.hist1 === "string" &&
+                         typeof entry.hist2 === "string" &&
+                         typeof entry.craftItemCount === "number"
+                    );
+               }
+          }
+
+          // 全域變數 WordsDictionary
+          let WordsDictionary = [];
+
+          // 初始化時載入 JSON 檔案
+          async function initializeWordsDictionary() {
+               try {
+                    // 動態判斷路徑
+                    // 根據當前 HTML 檔案位置自動推算 JSON 路徑
+                    let jsonUrl = location.pathname.replace(/\/Pages\/[^\/]+$/, '/DataSets/WordsDictionary.json');
+                    const response = await fetch(jsonUrl);
+                    if (!response.ok) {
+                         throw new Error('無法載入 WordsDictionary.json');
+                    }
+                    const data = await response.json();
+                    if (Array.isArray(data) && data.every(DictionaryEntry.validate)) {
+                         WordsDictionary = data.map(entry => new DictionaryEntry(
+                              entry.craftItem1Emoji,
+                              entry.craftItem1,
+                              entry.craftItem2Emoji,
+                              entry.craftItem2,
+                              entry.craftItem3Emoji,
+                              entry.craftItem3,
+                              entry.hist1,
+                              entry.hist2,
+                              entry.craftItemCount
+                         ));
+                         console.log('WordsDictionary 已初始化', WordsDictionary);
+                         renderWordsTable();
+                    } else {
+                         console.error('資料格式不正確');
+                    }
+               } catch (error) {
+                    console.error('初始化失敗：', error);
+               }
+          }
+
+          // 渲染資料表
           function renderWordsTable() {
                const tbody = document.getElementById('wordsTable').querySelector('tbody');
                tbody.innerHTML = '';
                WordsDictionary.forEach(entry => {
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
-                         <td>${entry.craftItem1Emoji} ${entry.craftItem1}</td>
-                         <td>${entry.hist1}</td>
-                         <td>${entry.craftItem2Emoji} ${entry.craftItem2}</td>
-                         <td>=</td>
-                         <td>${entry.craftItem3Emoji} ${entry.craftItem3}</td>
-                    `;
+                    <td>${entry.craftItem1Emoji} ${entry.craftItem1}</td>
+                    <td>${entry.hist1}</td>
+                    <td>${entry.craftItem2Emoji} ${entry.craftItem2}</td>
+                    <td>=</td>
+                    <td>${entry.craftItem3Emoji} ${entry.craftItem3}</td>
+                `;
                     tbody.appendChild(tr);
                });
           }
-          // 初始渲染
-          renderWordsTable();
-          // 若 WordsDictionary 有變動時可再次呼叫 renderWordsTable()
-     </script>
-     <script>
+
+          // 頁面載入時初始化
+          document.addEventListener('DOMContentLoaded', initializeWordsDictionary);
+
           // 將新資料加入 WordsDictionary，避免重複
           function updateWordsDictionary(newEntries) {
                newEntries.forEach(entry => {
@@ -355,10 +382,33 @@
                dialog.appendChild(cancelBtn);
                document.body.appendChild(dialog);
 
-               okBtn.onclick = function () {
+               okBtn.onclick = async function () {
                     const idx = parseInt(typeSelect.value, 10);
                     const opt = fileTypeOptions[idx];
                     const blob2 = new Blob([jsonString], { type: opt.mime });
+
+                    // 檢查是否支援 File System Access API
+                    if (window.showSaveFilePicker) {
+                         try {
+                              const handle = await window.showSaveFilePicker({
+                                   suggestedName: "WordsDictionary" + opt.ext,
+                                   types: [{
+                                        description: opt.label,
+                                        accept: { [opt.mime]: [opt.ext] }
+                                   }]
+                              });
+                              const writable = await handle.createWritable();
+                              await writable.write(blob2);
+                              await writable.close();
+                              alert('資料已儲存為 ' + handle.name);
+                         } catch (e) {
+                              alert('儲存失敗或已取消。');
+                         }
+                         document.body.removeChild(dialog);
+                         return;
+                    }
+
+                    // 傳統下載方式（不支援選擇路徑）
                     const a = document.createElement("a");
                     a.href = URL.createObjectURL(blob2);
                     a.download = "WordsDictionary" + opt.ext;
@@ -373,6 +423,7 @@
                cancelBtn.onclick = function () {
                     document.body.removeChild(dialog);
                };
+
           }
 
           function findFormula() {
