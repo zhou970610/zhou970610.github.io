@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <link rel="stylesheet" href="../Pages.css">
 <html lang="zh-Hant">
@@ -111,13 +110,13 @@
           <span style="font-size: 1rem; margin-left: 10px;">
                版本：<span id="versionText">1.0.0</span>
           </span>
-          <p>資料來源：波波(bobo_928)、飛將軍(flyxiang)、思樂冰恐龍(slpkr_yo)、Repeat(repeat_yang)</p>
+          <p>資料來源：<a href="https://zhou970610.github.io/DataSets/WordsDictionary.json">波波(bobo_928)</a>、<a href="https://flyxiang1206.github.io/Wordsfordays/FilteredData.json">飛將軍(flyxiang)</a>、思樂冰恐龍(slpkr_yo)、Repeat(repeat_yang)</p>
      </footer>
      <script>
-          
+
           //#region 版本號與資料結構定義與全域變數
           //若要修改版本號，請直接修改下方 version 變數
-          const version = "DEBUG 1.0.1";
+          const version = "DEBUG 1.0.2";
           document.getElementById('versionText').textContent = version;
           // 資料結構
           class DictionaryEntry {
@@ -188,6 +187,31 @@
                          } else {
                               console.error('資料格式不正確');
                          }
+                    }
+                    //抓飛將軍的資料
+
+                    jsonUrl = "https://flyxiang1206.github.io/Wordsfordays/FilteredData.json";
+                    const response = await fetch(jsonUrl);
+                    if (!response.ok) {
+                         throw new Error('無法載入 flyxiang FilteredData.json');
+                    }
+                    const data = await response.json();
+                    if (Array.isArray(data)) {
+                         WordsDictionary = data.map(entry => new DictionaryEntry(
+                              "", // craftItem1Emoji 預設空字串
+                              entry.left || "", // craftItem1
+                              "", // craftItem2Emoji 預設空字串
+                              entry.right || "", // craftItem2
+                              "", // craftItem3Emoji 預設空字串
+                              entry.result || "", // craftItem3
+                              entry.operator || "", // hist1
+                              "=", // hist2 統一給 "="
+                              0 // craftItemCount 預設 0
+                         ));
+                         console.log('WordsDictionary 已初始化成功');
+                         renderWordsTable();
+                    } else {
+                         console.error('資料格式不正確');
                     }
                } catch (error) {
                     console.error('初始化失敗：', error);
@@ -416,7 +440,7 @@
           //#endregion
 
           //#region 資料處理
-         
+
           // 將新資料加入 WordsDictionary，避免重複
           function updateWordsDictionary(newEntries) {
                newEntries.forEach(entry => {
@@ -446,7 +470,7 @@
                });
                renderWordsTable();
           }
-          
+
           function findCount(dataList, listIndex) {
                const data = dataList[listIndex];
                if (data.craftItemCount > 0) {
@@ -477,7 +501,7 @@
                data.craftItemCount = Math.max(addCount1, addCount2) + 1; // 將計算結果存回 data
                return data.craftItemCount;
           }
-          
+
           function findFormula() {
                const target = document.getElementById('targetWord').value.trim();
                if (!target) {
@@ -543,7 +567,7 @@
                     renderWordsTable();
                };
           }
-          
+
           //#endregion
      </script>
 </body>
