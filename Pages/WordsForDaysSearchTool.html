@@ -182,8 +182,7 @@
                                    entry.hist2,
                                    entry.craftItemCount
                               ));
-                              console.log('WordsDictionary 已初始化成功');
-                              renderWordsTable();
+                              console.log('WordsDictionary 已成功讀檔');
                          } else {
                               console.error('資料格式不正確');
                          }
@@ -197,19 +196,20 @@
                     }
                     const data = await response.json();
                     if (Array.isArray(data)) {
-                         WordsDictionary = data.map(entry => new DictionaryEntry(
-                              "", // craftItem1Emoji 預設空字串
+                         const flyxiangDictionary = data.map(entry => new DictionaryEntry(
+                              entry.craftItem1Emoji || "", // craftItem1Emoji 預設空字串
                               entry.left || "", // craftItem1
-                              "", // craftItem2Emoji 預設空字串
+                              entry.craftItem2Emoji || "", // craftItem2Emoji 預設空字串
                               entry.right || "", // craftItem2
-                              "", // craftItem3Emoji 預設空字串
+                              entry.craftItem3Emoji || "", // craftItem3Emoji 預設空字串
                               entry.result || "", // craftItem3
                               entry.operator || "", // hist1
-                              "=", // hist2 統一給 "="
-                              0 // craftItemCount 預設 0
+                              entry.hist2 || "=", // hist2 統一給 "="
+                              entry.craftItemCount || 0 // craftItemCount 預設 0
                          ));
-                         console.log('WordsDictionary 已初始化成功');
-                         renderWordsTable();
+                         // 更新 WordsDictionary
+                         updateWordsDictionary(flyxiangDictionary);
+                         console.log('WordsDictionary 已全部初始化成功');
                     } else {
                          console.error('資料格式不正確');
                     }
