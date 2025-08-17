@@ -175,11 +175,11 @@
                          if (Array.isArray(data) && data.every(DictionaryEntry.validate)) {
                               WordsDictionary = data.map(entry => new DictionaryEntry(
                                    entry.craftItem1Emoji,
-                                   entry.craftItem1,
+                                   entry.craftItem1.trim(),
                                    entry.craftItem2Emoji,
-                                   entry.craftItem2,
+                                   entry.craftItem2.trim(),
                                    entry.craftItem3Emoji,
-                                   entry.craftItem3,
+                                   entry.craftItem3.trim(),
                                    entry.hist1,
                                    entry.hist2,
                                    0 // 重新讀檔就重新算一次，確保是對的
@@ -204,11 +204,11 @@
                     if (Array.isArray(data)) {
                          const flyxiangDictionary = data.map(entry => new DictionaryEntry(
                               entry.craftItem1Emoji || "", // craftItem1Emoji 預設空字串
-                              entry.left || "", // craftItem1
+                              entry.left.trim() || "", // craftItem1
                               entry.craftItem2Emoji || "", // craftItem2Emoji 預設空字串
-                              entry.right || "", // craftItem2
+                              entry.right.trim() || "", // craftItem2
                               entry.craftItem3Emoji || "", // craftItem3Emoji 預設空字串
-                              entry.result || "", // craftItem3
+                              entry.result.trim() || "", // craftItem3
                               entry.operator || "", // hist1
                               entry.hist2 || "=", // hist2 統一給 "="
                               0 // craftItemCount 預設 0
@@ -296,11 +296,11 @@
                     const [craftItem3Emoji, craftItem3] = parseItem(items[2]);
                     return new DictionaryEntry(
                          craftItem1Emoji,
-                         craftItem1,
+                         craftItem1.trim(),
                          craftItem2Emoji,
-                         craftItem2,
+                         craftItem2.trim(),
                          craftItem3Emoji,
-                         craftItem3,
+                         craftItem3.trim(),
                          hist[0]?.textContent || "",
                          hist[1]?.textContent || "",
                          0
@@ -323,11 +323,11 @@
                     if (Array.isArray(parsedData) && parsedData.every(DictionaryEntry.validate)) {
                          fileDatas = parsedData.map(data => new DictionaryEntry(
                               data.craftItem1Emoji,
-                              data.craftItem1,
+                              data.craftItem1.trim(),
                               data.craftItem2Emoji,
-                              data.craftItem2,
+                              data.craftItem2.trim(),
                               data.craftItem3Emoji,
-                              data.craftItem3,
+                              data.craftItem3.trim(),
                               data.hist1,
                               data.hist2,
                               0
