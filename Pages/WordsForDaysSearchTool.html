@@ -54,7 +54,7 @@
      </div>
      <br>
      <div id="LogDIV">
-          <div >
+          <div>
                <label>Log 訊息：</label>
                <iframe src="WordsForDaysSearchToolLog.html"
                     style="width:100%;height:500px;border:1px solid #ccc;background:#fff;" title="Log 訊息"></iframe>
@@ -110,13 +110,15 @@
           <span style="font-size: 1rem; margin-left: 10px;">
                版本：<span id="versionText">1.0.0</span>
           </span>
-          <p>資料來源：<a href="https://zhou970610.github.io/DataSets/WordsDictionary.json">波波(bobo_928)</a>、<a href="https://flyxiang1206.github.io/Wordsfordays/FilteredData.json">飛將軍(flyxiang)</a>、思樂冰恐龍(slpkr_yo)、Repeat(repeat_yang)</p>
+          <p>資料來源：<a href="https://zhou970610.github.io/DataSets/WordsDictionary.json">波波(bobo_928)</a>、<a
+                    href="https://flyxiang1206.github.io/Wordsfordays/FilteredData.json">飛將軍(flyxiang)</a>、思樂冰恐龍(slpkr_yo)、Repeat(repeat_yang)
+          </p>
      </footer>
      <script>
 
           //#region 版本號與資料結構定義與全域變數
           //若要修改版本號，請直接修改下方 version 變數
-          const version = "DEBUG 1.0.2a";
+          const version = "DEBUG 1.0.2b";
           document.getElementById('versionText').textContent = version;
           // 資料結構
           class DictionaryEntry {
@@ -180,8 +182,12 @@
                                    entry.craftItem3,
                                    entry.hist1,
                                    entry.hist2,
-                                   entry.craftItemCount
+                                   0 // 重新讀檔就重新算一次，確保是對的
                               ));
+                              for (let i = 0; i < WordsDictionary.length; i++) {
+                                   let visitedList = [];
+                                   findCount(WordsDictionary, i, visitedList);
+                              }
                               console.log('WordsDictionary 已成功讀檔');
                          } else {
                               console.error('資料格式不正確');
@@ -205,10 +211,11 @@
                               entry.result || "", // craftItem3
                               entry.operator || "", // hist1
                               entry.hist2 || "=", // hist2 統一給 "="
-                              entry.craftItemCount || 0 // craftItemCount 預設 0
+                              0 // craftItemCount 預設 0
                          ));
                          for (let i = 0; i < flyxiangDictionary.length; i++) {
-                              findCount(flyxiangDictionary, i);
+                              let visitedList = [];
+                              findCount(flyxiangDictionary, i, visitedList);//重新計算每個字的 craftItemCount
                          }
                          // 更新 WordsDictionary
                          updateWordsDictionary(flyxiangDictionary);
@@ -301,7 +308,8 @@
                });
                fileDatas = tempDatas;
                for (let i = 0; i < fileDatas.length; i++) {
-                    findCount(fileDatas, i);
+                    let visitedList = [];
+                    findCount(fileDatas, i, visitedList);
                }
                document.getElementById('dataInput').value = JSON.stringify(fileDatas, null, 2);
                updateWordsDictionary(fileDatas);
@@ -322,10 +330,11 @@
                               data.craftItem3,
                               data.hist1,
                               data.hist2,
-                              data.craftItemCount
+                              0
                          ));
                          for (let i = 0; i < fileDatas.length; i++) {
-                              findCount(fileDatas, i);
+                              let visitedList = [];
+                              findCount(fileDatas, i, visitedList);
                          }
                          document.getElementById('dataInput').value = JSON.stringify(fileDatas, null, 2);
                          updateWordsDictionary(fileDatas);
@@ -474,34 +483,43 @@
                renderWordsTable();
           }
 
-          function findCount(dataList, listIndex) {
+          function findCount(dataList, listIndex, visitedList) {
                const data = dataList[listIndex];
-               if (data.craftItemCount > 0) {
-                    return 0; // 已經計算過了，直接返回
+               if (visitedList.includes(listIndex)) {
+                    return 1; // 已經找過了，所以回傳0
                }
+               visitedList.push(listIndex); // 標記為已訪問
                let addCount1 = 0;
                let addCount2 = 0;
                if (!data.craftItem3) {
                     return 0; // craftItem3 是空的，不需要計算
                }
                const baseItems = ["earth", "fire", "water", "wind"];
+               var ItemIndex1 = 0;
+               var ItemIndex2 = 0;
                if (baseItems.includes(data.craftItem1)) {
                     addCount1 = 0; // 初始單字，不計數
                } else {
-                    const itemIndex = dataList.findIndex(finddata => finddata.craftItem3 === data.craftItem1);
-                    if (itemIndex !== -1) {
-                         addCount1 = findCount(dataList, itemIndex);
+                    ItemIndex1 = dataList.findIndex(finddata => finddata.craftItem3 === data.craftItem1);
+                    if (ItemIndex1 !== -1) {
+                         addCount1 = findCount(dataList, ItemIndex1, visitedList);
                     }
                }
                if (baseItems.includes(data.craftItem2)) {
                     addCount2 = 0; // 初始單字，不計數
                } else {
-                    const itemIndex = dataList.findIndex(finddata => finddata.craftItem3 === data.craftItem2);
-                    if (itemIndex !== -1) {
-                         addCount2 = findCount(dataList, itemIndex);
+                    ItemIndex2 = dataList.findIndex(finddata => finddata.craftItem3 === data.craftItem2);
+                    if (ItemIndex2 !== -1) {
+                         addCount2 = findCount(dataList, ItemIndex2, visitedList);
                     }
                }
-               data.craftItemCount = addCount1+ addCount2 + 1; // 將計算結果存回 data
+               if (ItemIndex1 === ItemIndex2) {
+                    data.craftItemCount = addCount1 + 1; // 將計算結果存回 data
+               }
+               else {
+                    data.craftItemCount =addCount1+addCount2+ 1; // 將計算結果存回 data
+               }
+
                return data.craftItemCount;
           }
 
