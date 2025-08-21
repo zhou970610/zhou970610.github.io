@@ -122,7 +122,7 @@
           document.getElementById('versionText').textContent = version;
           // 資料結構
           class DictionaryEntry {
-               constructor(craftItem1Emoji = "", craftItem1 = "", craftItem2Emoji = "", craftItem2 = "", craftItem3Emoji = "", craftItem3 = "", hist1 = "", hist2 = "", craftItemCount = 0) {
+               constructor(craftItem1Emoji = "", craftItem1 = "", craftItem2Emoji = "", craftItem2 = "", craftItem3Emoji = "", craftItem3 = "", hist1 = "", hist2 = "", craftItemCount = CountInitial) {
                     this.craftItem1Emoji = craftItem1Emoji;
                     this.craftItem1 = craftItem1;
                     this.craftItem2Emoji = craftItem2Emoji;
@@ -182,7 +182,7 @@
                                    entry.craftItem3.trim().replace(/\n/g, '').replace(/\s+/g, ' '),
                                    entry.hist1,
                                    entry.hist2,
-                                   0 // 重新讀檔就重新算一次，確保是對的
+                                   entry.craftItemCount
                               ));
                               for (let i = 0; i < WordsDictionary.length; i++) {
                                    let visitedList = [];
@@ -211,7 +211,7 @@
                               entry.result.trim().replace(/\n/g, '').replace(/\s+/g, ' ') || "", // craftItem3
                               entry.operator.trim().replace(/\n/g, '').replace(/\s+/g, ' ') , // hist1
                               "=", // hist2 統一給 "="
-                              0 // craftItemCount 預設 0
+                              CountInitial // 飛將軍的檔案沒有這個數值，craftItemCount 預設 給最大值
                          ));
                          for (let i = 0; i < flyxiangDictionary.length; i++) {
                               let visitedList = [];
@@ -303,7 +303,7 @@
                          craftItem3.trim().replace(/\n/g, '').replace(/\s+/g, ' '),
                          hist[0]?.textContent || "",
                          hist[1]?.textContent || "",
-                         0
+                         CountInitial // 匯入新檔就重新算一次，確保是對的，預設給最大值
                     );
                });
                fileDatas = tempDatas;
@@ -330,7 +330,7 @@
                               data.craftItem3.trim().replace(/\n/g, '').replace(/\s+/g, ' '),
                               data.hist1,
                               data.hist2,
-                              0
+                              CountInitial // 匯入新檔就重新算一次，確保是對的，預設給最大值
                          ));
                          for (let i = 0; i < fileDatas.length; i++) {
                               let visitedList = [];
@@ -474,7 +474,7 @@
                          let existing = WordsDictionary[idx];
                          // craftItemCount 較小則替換
                          if (
-                              entry.craftItemCount <= existing.craftItemCount
+                              entry.craftItemCount < existing.craftItemCount
                          ) {
                               WordsDictionary[idx] = entry;
                          }
@@ -483,10 +483,14 @@
                renderWordsTable();
           }
 
+            const CountInitial = Number.MAX_SAFE_INTEGER;
           function findCount(dataList, listIndex, visitedList) {
                const data = dataList[listIndex];
                if (visitedList.includes(listIndex)) {
                     return 1; // 已經找過了，所以回傳0
+               }
+               if (data.craftItemCount !== CountInitial) {
+                    return data.craftItemCount; // 已經計算過了，直接回傳
                }
                visitedList.push(listIndex); // 標記為已訪問
                let addCount1 = 0;
